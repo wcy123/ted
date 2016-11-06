@@ -1,5 +1,7 @@
 package com.wcy123.parsec.stage6;
 
+import org.wcy123.list.Cons;
+
 import com.wcy123.parsec.impl.Pair;
 import com.wcy123.parsec.impl.ParserResult;
 
@@ -22,6 +24,14 @@ public interface Parsec<T>
 
     default <R> Parsec<Pair<T, R>> and(Parsec<R> other) {
         return Operations.and(this, other);
+    }
+
+    default Parsec<Cons<T>> comma(Parsec<Cons<T>> other) {
+        return Operations.comma(this, other);
+    }
+
+    default Parsec<Cons<T>> period() {
+        return Operations.period();
     }
 
     default Parsec or(Parsec other) {

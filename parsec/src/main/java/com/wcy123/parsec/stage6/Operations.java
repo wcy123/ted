@@ -20,6 +20,15 @@ public enum Operations {
                         b -> ret(makePair(a, b))));
     }
 
+    public static <T> Parsec<Cons<T>> comma(Parsec<T> parsecA, Parsec<Cons<T>> parsecB) {
+        return parsecA.bind(
+                a -> parsecB.bind(
+                        b -> ret(cons(a, b))));
+    }
+
+    public static <T> Parsec<Cons<T>> period() {
+        return ret(nil());
+    }
     public static <T> Parsec<T> or(Parsec<T> parsecA, Parsec<T> parsecB) {
         return iterableChars -> {
             final Iterable<ParserResult<T>> resultsA = parsecA.parse(iterableChars);
@@ -35,8 +44,7 @@ public enum Operations {
     }
 
     public static <T> Parsec<Cons<T>> many1(Parsec<T> parsecA, Parsec<Cons<T>> acc) {
-        return or(
-                parsecA.bind(
+        return or(parsecA.bind(
                         a -> many1(parsecA, acc).bind(
                                 as -> ret(cons(a, as)))),
                 acc);

@@ -19,7 +19,7 @@ public class ParsecsTest extends TestWithLogger {
         // parsecs.digit.parse(Lists.charactersOf("123abc"))
         // .forEach(this::dumpResult);
         // logger.log("testing digits");
-        parsecs.digits.parse(Lists.charactersOf("1b"))
+        parsecs.digits.parse(Lists.charactersOf("123456789b"))
                 .forEach(this::dumpResult);
     }
 
