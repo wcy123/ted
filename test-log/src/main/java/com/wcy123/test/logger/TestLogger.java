@@ -7,18 +7,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.Formatter;
-import java.util.Locale;
 
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
+import org.slf4j.helpers.MessageFormatter;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TestLogger extends TestWatcher {
     private final Class<?> clazz;
-    private Formatter formatter;
     private BufferedWriter writer;
 
     public TestLogger(Class<?> clazz) {
@@ -27,8 +25,8 @@ public class TestLogger extends TestWatcher {
 
     public void log(String format, Object... args) throws IOException {
         log.info(format, args);
-        formatter.format(format, args);
-        formatter.out().append('\n');
+        writer.append(MessageFormatter.format(format, args).getMessage());
+        writer.append('\n');
     }
 
     @Override
@@ -37,7 +35,6 @@ public class TestLogger extends TestWatcher {
         try {
             writer = Files.newBufferedWriter(logFile, StandardCharsets.UTF_8,
                     StandardOpenOption.WRITE, StandardOpenOption.CREATE);
-            formatter = new Formatter(writer, Locale.US);
         } catch (IOException e) {
             throw new IllegalArgumentException(e);
         }
@@ -51,7 +48,5 @@ public class TestLogger extends TestWatcher {
             log.error("error when writing to log", e);
             throw new IllegalArgumentException(e);
         }
-        formatter.close();
     }
-
 }
