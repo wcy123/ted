@@ -42,7 +42,7 @@ public class Parsecs {
     public Parsecs() {
         underscore = item('_');
         id = list.cons.call(or(underscore, alphabet), many(or(underscore, or(digit, alphabet))));
-        kClass = constant("class");
+        kClass = keyword("class");
         openBrace = item('{');
         closeBrace = item('}');
         semicolon = item(';');
@@ -52,7 +52,7 @@ public class Parsecs {
         return any.bind(c -> c == expected ? Monad.ret(c) : Monad.fail());
     }
 
-    public Parsec<Cons<Character>> constant(String expected) {
+    public Parsec<Cons<Character>> keyword(String expected) {
         Parsec<Cons<Character>> ret = list.nil.call();
 
         for (Character character : Lists
