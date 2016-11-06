@@ -3,10 +3,12 @@ package com.wcy123.parsec.stage4;
 import static com.wcy123.parsec.stage4.Operations.cons;
 import static com.wcy123.parsec.stage4.Operations.nil;
 import static com.wcy123.parsec.stage4.Parsec.item;
+import static org.wcy123.list.Functions.fromIterable;
 
 import java.io.IOException;
 
 import org.junit.Test;
+import org.wcy123.list.Cons;
 
 import com.google.common.collect.Lists;
 
@@ -30,4 +32,12 @@ public class OperationsTest extends TestWithLogger {
             e.printStackTrace();
         }
     }
+
+    @Test
+    public void testIt() throws Exception {
+
+        final Cons<Character> hello = fromIterable(Lists.charactersOf("hello world"));
+        System.out.println(hello);
+    }
+
 }
