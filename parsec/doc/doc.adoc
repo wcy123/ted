@@ -1,0 +1,539 @@
+= 语法词法分析
+王纯业;
+:doctype: book
+@asciidoctor_options[:backend] = 'xhtml'
+:snippets: ../src/main/java/com/wcy123
+:test-snippets: ../src/test/java/com/wcy123
+:toc:
+:toclevels: 4
+:source-highlighter: highlight.js
+
+本文主要参考 http://www.cs.nott.ac.uk/~pszgmh/pearl.pdf
+
+== 什么是词法语法分析
+
+词法分析的输入一个字符串流，要求的输出是一个词法符号（lexical token）流。例如
+```java
+class A　{};
+```
+
+根据语言的定义，也许会生成下面的词法流
+
+```
+CLASS, ID("A"), OPEN_BRACE, CLOSE_BRACE
+```
+
+语义分析的输入是词法符号流，输出是抽象语法树(AST)。
+
+如果用 java 建模，解释器的输入，可以表示称为 `Iterable<Character>`，解释器的输出可以表示下面的类 `ParserResult`。
+
+[source, java]
+----
+include::{snippets}/parsec/impl/ParserResult.java[]
+----
+
+`T　value` 表示解释器的解析结果，`Iterable<Character> remain` 表示后面还没有解析的字符串。
+
+那么，解释器本身，可以定义为下面的接口。
+
+[source, java]
+----
+include::{snippets}/parsec/stage0/Parsec.java[]
+----
+
+下面是一个解析整数的例子
+
+[source, java]
+----
+include::{test-snippets}/parsec/stage0/ParsecTestStage0.java[]
+----
+
+程序输出
+
+[source]
+----
+include::../target/ParsecTestStage0.log[]
+----
+
+这里的例子可以看出，如果解释器解析成功，那么从字符串里面提取出语法值，例子里面是 `Integer` 然后返回剩余的没有解析的字符串。
+如果解析失败，那么返回一个空的 `Iterable<ParserResult<Integer>>`
+
+注意到，在解析成功的时候，返回结果里面包含所有可能的成功结果。这个例子中，只返回了一个结果。
+
+== 从简单的构造开始
+
+构造一个解释器是很繁琐的，如果通过组合简单的解释器，形成一个复杂的解释器，那么就会容易一些。为此，我们定义几个很特别的函数：
+
+- `ret` 不消费任何字符串，只是返回一个新的语义值。
+- `fail` 不消费任何字符串，返回空结果，表示解析失败
+- `bind` 这个函数很复杂。
+
+[source, java]
+----
+include::{snippets}/parsec/stage1/Monad.java[]
+----
+
+
+分析 `bind` 函数。这个函数接收两个参数：
+
+- 一个解析器 `self`，语义值类型是 `T`
+- 一个函数 `f`。 ：
+** 函数 `f` 只接收一个参数，就是上一个解释器的语义值 `result.getValue()`，类型是 `T`
+** 函数 `f` 的返回值是一个新的解释器，类型是 `Parsec<R>`，语义值的类型是 `R`。
+- `bind` 返回一个新的解析器，语义值的类型是 `R`，`R` 型解释器。
+
+这个函数 `bind` 干什么用的呢？
+
+. `iterableCharacter-> ...` 这个表达式，表明 `bind` 返回了一个新的解析器。
+. 首先，调用 `self` 解析器，试图解析 `T` 型语义值。
+. 如果 `self` 解析失败，返回一个空的 `Iterable<ParserResult>`，那么 `transform`, `concat` 依然返回一个空，表示解析失败。也就是说，如果 `self` 解析器解析失败，
+那么 `bind` 返回的解析器也解析失败。
+. 如果 `self` 解析成功，那么我们得到了一些（注意不是一个）可能解析成功的语义值 `T`。
+. 对于每一个可能语义值 `T result`，我们调用函数  `f` ，得到一个新的解析器，语义值类型是 `R`。
+. 因为 `self` 有可能返回多个可能的语义值，那么经过  `transform` ，我们得到了多个 `R` 型解释器。
+. `bind` 返回的解释器，就是把所有可能的 `R` 型解释器，产生的结果连接起来。`concat` 。
+. `concat` 函数的含义，意味着下面的结果：
+.. 如果 `self` 产生的多个可能结果中，经过 `f` 的变换，生成的新的 `R` 型解释器，不一定每一个都能继续解析成功，那么那些不成功的，就被忽略掉了。
+.. 那些成功的，就被留了下来。
+.. 如果最后没有一个成功留下来的，`bind` 生成的这个新解析器，整体解析失败。
+
+这个函数十分抽象，一时还看不出他的用处来。实际上 `ret` 和 `bind` 这两个函数构成了 `Monad` 这样一种数据类型，这种数据类型，可以方便的实现组合。
+
+== 定义一个最原始，最有用的解析器 `item`
+
+[source, java]
+----
+include::{snippets}/parsec/stage0/Item.java[]
+----
+
+这个解释器的语义值就是一个 `Character` 。就是看看待解析的字符串中的第一个字符，是不是期待的字符。如果是，就返回这个字符，如果不是，就表示解析失败。
+
+[source, java]
+----
+include::{test-snippets}/parsec/stage0/ItemTest.java[]
+----
+
+程序输出：
+
+[source]
+----
+include::../target/ItemTest.log[]
+----
+
+可以看到第一次解析成功，第二次解析失败。
+
+== 定义  and 和  or
+
+首先为了方便，在 `Parsec` 的接口内，定义  `bind` 等方法。
+
+[source, java]
+----
+include::{snippets}/parsec/stage3/Parsec.java[]
+----
+
+然后定义 `and` 和 `or` 的操作符。
+
+[source, java]
+----
+include::{snippets}/parsec/stage3/Operations.java[]
+----
+
+注意一下几点
+
+. `and` 返回的是 `Pair<R,T>` 型解释器。两个参数不必是同型解释器。
+. `or` 返回的是  `T` 型解释器，两个参数必须是同型解释器。
+. `and` 使用了 `bind` 和 `ret` 两个函数
+
+这两个操作符类似于 **乘法** 和 **加法** ，是最基本的组合操作符。其他更加复杂的操作符，可以由他们组合生成。
+
+测试用例
+
+
+[source, java]
+----
+include::{test-snippets}/parsec/stage3/AndOrTest.java[]
+----
+
+程序输出：
+
+[source]
+----
+include::../target/AndOrTest.log[]
+----
+
+== 增加 `cons` 操作符
+
+
+```java
+public static <T> Parsec<Cons<T>> cons(Parsec<T> parsecA, Parsec<Cons<T>> parsecB) {
+    return parsecA.bind(
+            a -> parsecB.bind(
+                    b -> Monad.ret(Functions.cons(a, b))));
+}
+public static <T> Parsec<Cons<T>> nil() {
+    return Monad.ret(Cons.nil());
+}
+```
+
+功能上和 and 类似，但是类型不一样。这里面也只用了 `bind` 和  `ret`
+
+
+```java
+cons(item('h'), cons(item('e'), cons(item('l'), cons(item('l'), cons(item('o'), nil())))))
+                .parse(Lists.charactersOf("hello world"))
+                .forEach(this::dumpResult);
+```
+
+输出
+
+```
+testing hello
+value = [[h,e,l,l,o]]
+remains [[ , w, o, r, l, d]]
+```
+
+== 增加 `lift` 操作符
+
+上一个例子中，很明显看到 `cons` 这个操作符和 `list` 里面的 `cons` 操作符很像，`nil` 和 `list` 里面的
+`nil` 也很像。 抽象就是找到相同的部分，去掉细节，提取出相同的部分。
+
+[options="header,footer"]
+|=======================
+|               |类型
+|`list.Functions::nil`    | `-> Cons<T>`
+|`parsec.Operations::nil`    | `-> Parsec<Cons<T>>`
+|`list.Functions::cons`    | `T -> Cons<T> -> Cons<T>`
+|`parsec.Operations::cons`    | `Parsec<T> -> Parsec<Cons<T>> -> Parsec<Cons<T>>`
+|=======================
+
+也就是说，上面的每一个类型上 X ， 都增加了一个 `Parsec`，就变成了新的类型。
+
+`lift` 函数的作用，就是给定任意一个函数，能返回一个新的函数，支持 `Parsec`。
+
+[options="header,footer"]
+|=======================
+|               |类型
+|`lift0`    | `(-> T) -> (-> Parsec<T>)`
+|`lift1`    | `(T -> R) -> (Parsec<T> -> Parsec<R>)`
+|`lift2`    | `(T -> S -> R) -> (Parsec<T> -> Parsec<S> -> Parsec<R>)`
+|=======================
+
+
+```java
+public static <T> Func0<Parsec<T>> lift0(Func0<T> f) {
+    return () -> ret(f.call());
+}
+
+public static <T, R> Func1<Parsec<T>, Parsec<R>> lift1(Func1<T, R> f) {
+    return parsecA -> parsecA.bind(
+            a -> ret(f.call(a)));
+}
+
+public static <T, S, R> Func2<Parsec<T>, Parsec<S>, Parsec<R>> lift2(Func2<T, S, R> f) {
+    return (parsecA, parsecB) -> parsecA.bind(
+            a -> parsecB.bind(
+                    b -> ret(f.call(a, b))));
+}
+```
+
+非常有意思的事情是，lift 系列函数的实现，仅仅使用了 `bind` 和  `ret` 这两个函数。
+也就是说，任意实现 `bind` 和  `ret` 这两个函数的类，都可以重用 `lift` 系列函数。
+像这样的函数还有很多。
+
+新生成的函数的含义是什么呢？ 不同的 Monad 有不同的含义。对于 Parsec 这个 Monad 来说，`lift`
+系列函数提供了一种机制，从简单的语义值，生成复杂的语义值。`item` 的语义值是 `Character`，那么我们可以从这个最简单的语义值，生成 String 的语义值，
+从 String 语义值，生成 Integer 语义值， 然后有这些语义值，生成 POJO 语义值。这样我们就可以把字符串解析成任意的  POJO 对象，AST 可以其中的一种。
+
+例如下面的 `nil` 和  `cons` 的实现可以变成下面这个样子。
+
+```java
+public class List<T> {
+    public final Func2<Parsec<T>, Parsec<Cons<T>>, Parsec<Cons<T>>> cons =
+            Monad.lift2(Functions::cons);
+    public final Func0<Parsec<Cons<T>>> nil =
+            Monad.lift0(Cons::<T>nil);
+
+    public List() {}
+}
+```
+
+这里有些 java 本身特有的语言特性和函数式编程融合的问题。`List` 类就是一个模块容器，已经失去 *类*
+的意义。其实 `List::cons` 可以是 static 常量，可是 Java 的变量不支持 generic。
+
+```java
+public final static <T> Func2<Parsec<T>, Parsec<Cons<T>>, Parsec<Cons<T>>> cons
+   =  Monad.lift2(Functions::cons);
+```
+这个不是合法的  JAVA。
+
+还有一种办法就是用 static function
+
+```java
+public final static <T> Func2<Parsec<T>, Parsec<Cons<T>>, Parsec<Cons<T>>> fcons()
+{
+   return  Monad.lift2(Functions::cons);
+}
+```
+
+但是这种方式，每次调用的时候，使用 `List::fcons()` 的方式。
+
+用 final 对象的方式实现的话，调用的时候，使用 `new List().cons` 的方式。我们可以把这个 `new List()` dummy 对象
+放在目标模块的 `private final new List<T> list` 中， 这样，调用起来，看起来是 `list.cons` 。
+
+这个 `private final new List<T> list` ，就是类似于 `import` 语句。
+
+```java
+private final List<Character> list = new List();
+   // import list functions
+   private final List<Character> list = new List();
+   @Test
+   public void consTest() throws Exception {
+       logger.log("testing hello");
+       list.cons.call(item('h'), list.cons.call(item('e'), list.cons.call(item('l'), list.cons.call(item('l'), list.cons.call(item('o'), list.nil.call())))))
+               .parse(Lists.charactersOf("hello world"))
+               .forEach(this::dumpResult);
+   }
+}
+```
+
+由于  Java 中 function 对象不是 first class citizen， 所以导致 `list.cons.call` 看起来比较麻烦。这是 Java 语言和函数式编程对接的时候产生的问题。
+
+不过可以用小函数绕过这个问题。
+
+```java
+@Test
+public void consTest2() throws Exception {
+    logger.log("testing hello");
+    symbol("hello")
+            .parse(Lists.charactersOf("hello world"))
+            .forEach(this::dumpResult);
+}
+
+private Parsec<Cons<Character>> symbol(String symbolName) {
+    Parsec<Cons<Character>> ret = list.nil.call();
+
+    for (Character character : Lists
+            .charactersOf(new StringBuilder(symbolName).reverse().toString())) {
+        ret = list.cons.call(item(character), ret);
+    }
+    return ret;
+}
+```
+== `any` 解析器
+
+这个是最原始的解析器，比 `item` 还要原始，只要还有下一个字符，就解析成功，语义值是该字符。
+
+```java
+public final Parsec<Character> any =
+        chars -> Iterables.isEmpty(chars) ? Collections.emptyList()
+                : Collections.singleton(
+                        makeResult(Iterables.get(chars, 0), Iterables.skip(chars, 1)));
+```
+
+== `digit` 解析器
+
+```java
+final Parsec<Character> digit =
+        any.bind(c -> c >= '0' && c <= '9' ? Monad.ret(c)
+                : Monad.fail());
+```
+
+判断一个字符是否是数字。其他 `alphabet` 之类的也类似。这里慢慢看到了 `bind` `ret` 组合起来的强大。
+
+
+== `many` 操作符
+```java
+public static <T> Parsec<T> or(Parsec<T> parsecA, Parsec<T> parsecB) {
+    return iterableChars -> {
+        final Iterable<ParserResult<T>> resultsA = parsecA.parse(iterableChars);
+        return Iterables.isEmpty(resultsA) ? parsecB.parse(iterableChars)
+                : resultsA;
+    };
+
+}
+
+public static <T> Parsec<Cons<T>> many(Parsec<T> parsecA) {
+    return many1(parsecA, ret(nil())).bind(
+            result -> ret(result));
+}
+
+public static <T> Parsec<Cons<T>> many1(Parsec<T> parsecA, Parsec<Cons<T>> acc) {
+    return or(parsecA.bind(
+                    a -> many1(parsecA, acc).bind(
+                            as -> ret(cons(a, as)))),
+            acc);
+}
+```
+
+`or` 操作符是比较基本操作符，首先看 `parsecA` 是否解析成功，如果成功，就用 `A` 的结果。如果不成功，就继续尝试用  `parsecB` 解析。
+
+`many`  不断尝试 `parsecA` 解析，如果解析成功，就继续解析，直到解析失败为止。如果解析失败，那么返回目前解析成功的部分，如果一次都没有解析承成功过，返回空。
+
+注意到，`many` 的实现仅仅用到了，`or`, `bind`, `ret`。
+
+== `digits` 解析器
+
+```java
+final Parsec<Cons<Character>> digits = Operations.many(digit);
+```
+
+事情变得有意思起来了，很容易构造更加复杂的解析器。
+
+```
+parsecs.digits.parse(Lists.charactersOf("123456789b"))
+                .forEach(this::dumpResult);
+```
+
+运行结果是
+
+
+```
+value = [1,2,3,4,5,6,7,8,9]
+remains [b]
+```
+
+这里有爆栈的风险，但是这是 递归解析器（Recursive descent parser ）本身的特点，比较难克服。
+如果要克服这个缺点，需要放弃 functional style ，用 imperative 的方式来实现。
+
+幸好，现实的代码是，几乎不会出现几千几万长度的数字常量。
+
+== 一个完整的小例子
+
+```
+class aClass {}
+```
+
+我们构造一个解析器，试图解析上面的类似 java 的语言。
+
+```java
+parsecs.whiteSpaces
+               .and(parsecs.kClass)
+               .and(parsecs.whiteSpaces)
+               .and(parsecs.id).bind(
+               className -> parsecs.whiteSpaces
+                       .and(parsecs.openBrace)
+                       .and(parsecs.whiteSpaces)
+                       .and(parsecs.closeBrace)
+                       .and(parsecs.whiteSpaces)
+                       .bind(
+                               _ignore1 -> Monad.ret(className)))
+               .parse(Lists.charactersOf(" class aClass{}"))
+               .forEach(this::dumpResult);
+```
+
+下面是一些 parsecs 的定义
+
+```java
+public class Parsecs {
+    private static final List<Character> list = new List();
+
+    public final Parsec<Character> any =
+            chars -> Iterables.isEmpty(chars) ? Collections.emptyList()
+                    : Collections.singleton(
+                            makeResult(Iterables.get(chars, 0), Iterables.skip(chars, 1)));
+    final Parsec<Character> digit =
+            any.bind(c -> c >= '0' && c <= '9' ? Monad.ret(c)
+                    : Monad.fail());
+    final Parsec<Character> alphabet =
+            any.bind(c -> (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ? Monad.ret(c)
+                    : Monad.fail());
+    final Parsec<Character> whiteSpace = any.bind(c -> c == ' ' ||  c == '\t' || c == '\f' || c == '\r' || c == '\n' ?
+            Monad.ret(c) :
+            Monad.fail());
+
+    final Parsec<Cons<Character>> whiteSpaces = many(whiteSpace);
+
+    final Parsec<Cons<Character>> digits = many(digit);
+
+    final Parsec<Character> underscore;
+    final Parsec<Cons<Character>> id;
+    final Parsec<Cons<Character>> kClass;
+    final Parsec<Character> openBrace;
+    final Parsec<Character> closeBrace;
+    final Parsec<Character> semicolon;
+
+    public Parsecs() {
+        underscore = item('_');
+        id = list.cons.call(or(underscore, alphabet), many(or(underscore, or(digit, alphabet))));
+        kClass = keyword("class");
+        openBrace = item('{');
+        closeBrace = item('}');
+        semicolon = item(';');
+    }
+
+    public Parsec<Character> item(char expected) {
+        return any.bind(c -> c == expected ? Monad.ret(c) : Monad.fail());
+    }
+
+    public Parsec<Cons<Character>> keyword(String expected) {
+        Parsec<Cons<Character>> ret = list.nil.call();
+
+        for (Character character : Lists
+                .charactersOf(new StringBuilder(expected).reverse().toString())) {
+            ret = list.cons.call(item(character), ret);
+        }
+        return ret;
+    }
+}
+```
+
+== 附录
+
+
+=== java8 lambda 表达式几乎是必须的
+
+```java
+public class ParsecTest {
+    @Test
+    public void main() {
+        ImmutableList<Character> chars = Lists.charactersOf("hello");
+        Parsec.item('h')
+                .and(Parsec.item('e'))
+                .and(Parsec.item('l'))
+                .and(Parsec.item('l'))
+                .and(Parsec.item('o'))
+                .parse(chars).forEach(
+                        p -> {
+                            System.out.println(p.getValue());
+                            System.out.println(p.getRemain());
+                        });
+    }
+}
+```
+
+如果没有 lambda 表达式
+
+```java
+    public void main() {
+        ImmutableList<Character> chars = Lists.charactersOf("hello");
+        Parsec.item('h')
+                .and(Parsec.item('e'))
+                .and(Parsec.item('l'))
+                .and(Parsec.item('l'))
+                .and(Parsec.item('o'))
+                .parse(chars).forEach(
+                            (ParserResult<Pair<Pair<Pair<Pair<Character, Character>, Character>, Character>, Character>, Iterable<Character>> p) -> {
+                                System.out.println(p.getValue());
+                            System.out.println(p.getRemain());
+                        });
+    }
+```
+
+如果不用 fluent style , 代码看起来是这样。
+
+```java
+     public void main() {
+        ImmutableList<Character> chars = Lists.charactersOf("hello");
+        final Parsec<Pair<Pair<Pair<Pair<Character, Character>, Character>, Character>, Character>> hello = Parsec.item('h')
+                .and(Parsec.item('e'))
+                .and(Parsec.item('l'))
+                .and(Parsec.item('l'))
+                .and(Parsec.item('o'));
+        final Iterable<ParserResult<Pair<Pair<Pair<Pair<Character, Character>, Character>, Character>, Character>, Iterable<Character>>> results = hello
+                .parse(chars);
+        for (ParserResult<Pair<Pair<Pair<Pair<Character, Character>, Character>, Character>, Character>, Iterable<Character>> p : results) {
+            System.out.println(p.getValue());
+            System.out.println(p.getRemain());
+        }
+    }
+```

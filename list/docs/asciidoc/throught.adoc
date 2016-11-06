@@ -1,0 +1,32 @@
+
+
+
+
+为什么要继承 bind
+
+因为许多公用的库, 只需要知道 monad 不需要知道具体的 bind 的实现.
+
+为什么不能继承 bind
+
+bind 的类型很特别
+
+bind:: M<T> -> ( T -> M<R> ) -> M<R>
+
+这里面有三个类型
+
+M<T>
+M<R>
+Func1<T,M<R>>
+
+bind 的类型是不能混的, 例如, list monad 就不能产生 maybe monad
+bind 是强类型的.
+
+如果强制类型转换, 就失去了编译器的类型推导, 保证类型一致的作用.
+
+但是 M<T> M<R> 实际是是每一种中 monad 一个
+
+所以 bind 的类型是多种, 而不是一种.
+
+java generic 的 method bridge 是否能解决这个问题呢?
+
+bridge method 是可以定义 generic method type

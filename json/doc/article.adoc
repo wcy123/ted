@@ -1,0 +1,277 @@
+= Jackson data binding
+王纯业;
+:doctype: book
+@asciidoctor_options[:backend] = 'xhtml'
+:snippets: ../src/main/java/com/wcy123/demo
+:test-snippets: ../src/test/java/com/wcy123/demo
+:toc:
+:toclevels: 4
+:source-highlighter: highlight.js
+
+
+== 简单的 POJO binding
+
+首先构造一个简单的 maven 的项目，包含以下依赖。
+
+```xml
+<dependency>
+ <groupId>com.fasterxml.jackson.core</groupId>
+ <artifactId>jackson-databind</artifactId>
+ <version>2.8.3</version>
+</dependency>
+```
+
+构造一个简单的 POJO
+[source, java]
+----
+include::{snippets}/json/binding/Point.java[]
+----
+
+
+绑定 POJO 的数据类型
+[source, java]
+----
+include::{test-snippets}/json/binding/PointTest.java[]
+----
+
+输出
+
+[source, text]
+----
+include::../target/com.wcy123.demo.json.binding.PointTest.log[]
+----
+
+
+== Immutable 的类
+
+
+[source, java]
+----
+include::{snippets}/json/binding/ImmutablePoint1.java[]
+----
+
+
+绑定 POJO 的数据类型
+[source, java]
+----
+include::{test-snippets}/json/binding/ImmutablePoint1Test.java[]
+----
+
+输出
+
+[source, java]
+----
+include::../target/com.wcy123.demo.json.binding.ImmutablePoint1Test.log[]
+----
+
+
+这个异常的原因是因为 Immutable 没有默认的无参构造函数。因为 Immutable 本身的特点, 我们无法提供无参构造函数。
+
+解决方案是用 `@JsonCreator` 这个注解
+
+[source, java]
+----
+include::{snippets}/json/binding/ImmutablePoint2.java[]
+----
+
+[source, java]
+----
+include::{test-snippets}/json/binding/ImmutablePoint2Test.java[]
+----
+
+运行结果是
+
+[source, java]
+----
+include::../target/com.wcy123.demo.json.binding.ImmutablePoint2Test.log[]
+----
+
+`@JsonCreator` 还可以用在静态方法上
+
+[source, java]
+----
+include::{snippets}/json/binding/ImmutablePoint3.java[]
+----
+
+注意只能提供一个静态方法，如果提供两个静态方法，生成同一个 POJO 类， 就会有以下异常
+
+```java
+Exception in thread "main" com.fasterxml.jackson.databind.JsonMappingException: Conflicting property-based creators: already had explicitly marked creator [method com.wcy123.demo.json.binding.ImmutablePoint3#createPoint(2 params)], encountered another: [method com.wcy123.demo.json.binding.ImmutablePoint3#createPoint2(2 params)]
+ at [Source: {"x":3,"y":4}; line: 1, column: 1]
+	at com.fasterxml.jackson.databind.JsonMappingException.from(JsonMappingException.java:296)
+	at com.fasterxml.jackson.databind.deser.DeserializerCache._createAndCache2(DeserializerCache.java:269)
+	at com.fasterxml.jackson.databind.deser.DeserializerCache._createAndCacheValueDeserializer(DeserializerCache.java:244)
+	at com.fasterxml.jackson.databind.deser.DeserializerCache.findValueDeserializer(DeserializerCache.java:142)
+	at com.fasterxml.jackson.databind.DeserializationContext.findRootValueDeserializer(DeserializationContext.java:476)
+	at com.fasterxml.jackson.databind.ObjectMapper._findRootDeserializer(ObjectMapper.java:3890)
+	at com.fasterxml.jackson.databind.ObjectMapper._readMapAndClose(ObjectMapper.java:3785)
+	at com.fasterxml.jackson.databind.ObjectMapper.readValue(ObjectMapper.java:2833)
+	at com.wcy123.demo.json.binding.MainImmutablePoint3.main(MainImmutablePoint3.java:12)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:497)
+	at com.intellij.rt.execution.application.AppMain.main(AppMain.java:144)
+Caused by: java.lang.IllegalArgumentException: Conflicting property-based creators: already had explicitly marked creator [method com.wcy123.demo.json.binding.ImmutablePoint3#createPoint(2 params)], encountered another: [method com.wcy123.demo.json.binding.ImmutablePoint3#createPoint2(2 params)]
+	at com.fasterxml.jackson.databind.deser.impl.CreatorCollector.verifyNonDup(CreatorCollector.java:335)
+	at com.fasterxml.jackson.databind.deser.impl.CreatorCollector.addPropertyCreator(CreatorCollector.java:170)
+	at com.fasterxml.jackson.databind.deser.BasicDeserializerFactory._addDeserializerFactoryMethods(BasicDeserializerFactory.java:757)
+	at com.fasterxml.jackson.databind.deser.BasicDeserializerFactory._constructDefaultValueInstantiator(BasicDeserializerFactory.java:320)
+	at com.fasterxml.jackson.databind.deser.BasicDeserializerFactory.findValueInstantiator(BasicDeserializerFactory.java:253)
+	at com.fasterxml.jackson.databind.deser.BeanDeserializerFactory.buildBeanDeserializer(BeanDeserializerFactory.java:219)
+	at com.fasterxml.jackson.databind.deser.BeanDeserializerFactory.createBeanDeserializer(BeanDeserializerFactory.java:141)
+	at com.fasterxml.jackson.databind.deser.DeserializerCache._createDeserializer2(DeserializerCache.java:406)
+	at com.fasterxml.jackson.databind.deser.DeserializerCache._createDeserializer(DeserializerCache.java:352)
+	at com.fasterxml.jackson.databind.deser.DeserializerCache._createAndCache2(DeserializerCache.java:264)
+	... 12 more
+```
+
+还有一种方法就是用  `JsonDeserialize` 和 `JsonPojoBuilder` 配合起来使用。
+
+[source, java]
+----
+include::{snippets}/json/binding/ImmutablePoint4.java[]
+----
+
+构造一个 builder 类
+[source, java]
+----
+include::{snippets}/json/binding/ImmutablePoint4Builder.java[]
+----
+
+这里需要配置 `withPrefix` 和 `buildMethodName` , 用于符合 Builder 类里面的命名。
+
+== 接口多态
+
+还有其他的映射方法，各有优缺点。
+
+=== 使用 EXISTING_PROPERTY
+[source,java]
+----
+include::{snippets}/json/binding/Animal1.java[]
+----
+
+这里的注解比较复杂，难点就是 Deserializer 需要一些信息，用于构造子类。这些信息只能从父接口中获取。
+
+`JsonTypeInfo` 和 `JsonSubTypes` 告诉 Deserilizer 从哪里获得这个信息。
+
+* `use = JsonType.id.NAME` , 通过名字映射成子类。
+* `include = JsonTypeInfo.As.EXISTING_PROPERTY` ，名字包含在 json 的一个属性里面
+* `property = "animaltype"` 这个属性的名字是 `animalType`。
+* `JsonSubTypes` 罗列所名字(`name`) 到 类的映射关系。
+
+
+`Animal1` 有一个接口函数 `getAnimalType`，子类 Dog, Cat 实现这个方法，返回各自的类型标识。
+
+[source,java]
+----
+include::{test-snippets}/json/binding/Animal1Test.java[]
+----
+
+输出
+
+[source,txt]
+----
+include::../target/com.wcy123.demo.json.binding.Animal1Test.log[]
+----
+
+=== 使用 PROPERTY
+
+上面的例子需要每个子类实现 `getAnimalType`，用 `PROPERTY` 可以避免这个
+
+[source,java]
+----
+include::{snippets}/json/binding/Animal2.java[]
+----
+
+[source,java]
+----
+include::{test-snippets}/json/binding/Animal1Test.java[]
+----
+
+输出
+
+[source,txt]
+----
+include::../target/com.wcy123.demo.json.binding.Animal2Test.log[]
+----
+
+=== 使用 `@JsonTypeName` 避免罗列所有子类信息
+
+上面的例子需要在接口上用 `@JsonSubTypes` 罗列所有实现的子类， 这个依赖不是很好。因为我们增加一个实现的时候，不想改动接口（或者父类）。
+
+[source,java]
+----
+include::{snippets}/json/binding/Animal3.java[]
+----
+
+[source,java]
+----
+include::{test-snippets}/json/binding/Animal3Test.java[]
+----
+
+我们看到三点改动
+
+* 接口 Animal 去掉了 `@JsonSubTypes`
+* 每个子类实现用 `@JsonTypeName` 指明自己的逻辑名称，这里需要注意有名字冲突的可能性。
+* `mapper.registerSubtypes` 注册子类实现。这里可以用 DI 的方式实现。
+
+```java
+@Configuration
+public static class Config extends WebMvcConfigurerAdapter {
+   @Override
+   public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
+      converters.add(converter());
+   }
+
+   @Bean
+   MappingJackson2HttpMessageConverter converter() {
+      MappingJackson2HttpMessageConverter converter =
+                new MappingJackson2HttpMessageConverter();
+        final ObjectMapper mapper = converter.getObjectMapper();
+        mapper.registerSubtypes(Animal3.Dog.class);
+        mapper.registerSubtypes(Animal3.Cat.class);
+        return converter;
+  }
+}
+```
+
+如果性能不是问题， 我们可以用下面的方法扫描所有类，
+
+```java
+List<Class<?>> findAllSubtypes(Class<?> clazz) throws ClassNotFoundException {
+       List<Class<?>> result = new ArrayList();
+       ClassPathScanningCandidateComponentProvider provider =
+               new ClassPathScanningCandidateComponentProvider(true);
+       provider.addIncludeFilter(new AssignableTypeFilter(clazz));
+
+       Set<BeanDefinition> components =
+               provider.findCandidateComponents(clazz.getPackage().getName());
+       for (BeanDefinition component : components) {
+           Class cls = Class.forName(component.getBeanClassName());
+           result.add(cls);
+       }
+       return result;
+   }
+```
+
+这样，我们不用像下面这样罗列所有子类，
+```java
+mapper.registerSubtypes(Animal3.Dog.class);
+mapper.registerSubtypes(Animal3.Cat.class);
+```
+
+而是类似如下的代码，搜索所有子类。代价就是代码很慢。
+
+```java
+final List<Class<?>> allSubtypes = findAllSubtypes(Animal3.class);
+for (Class<?> subtype : allSubtypes) {
+   mapper.registerSubtypes(subtype);
+}
+```
+
+[NOTE]
+====
+注意 `provider.findCandidateComponents(clazz.getPackage().getName());`
+这个限制所有子类必须在同一个包下面才能搜索到
+====
