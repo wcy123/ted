@@ -52,6 +52,7 @@ public final class Cons<T> implements Iterable<T> {
      * @deprecated there is no alternative, try to avoid calling this function.
      * @param cdr new cdr
      */
+    @SuppressWarnings("deprecation")
     @Deprecated
     public void setCdr(Cons<T> cdr) {
         this.cdr = cdr;

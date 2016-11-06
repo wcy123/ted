@@ -15,9 +15,8 @@ import rx.functions.Func2;
  * implement these functions. 2. we cannot rely on JVM supporting on tail call optimization, so that
  * some implementations are using imperative style.
  */
-public class Functions {
-    // this is a container class
-    private Functions() {}
+public enum Functions {
+    ;
 
     // -------------- constructor -------------
     @SafeVarargs

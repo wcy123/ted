@@ -23,6 +23,7 @@ public class EfficientBuilder<T> {
         header = null;
     }
 
+    @SuppressWarnings("deprecation")
     public EfficientBuilder<T> append(T car) {
         if (header == null) {
             header = cons(car, Cons.nil());
@@ -39,6 +40,7 @@ public class EfficientBuilder<T> {
         return build(Cons.nil());
     }
 
+    @SuppressWarnings("deprecation")
     public Cons<T> build(Cons<T> tail) {
         if (header == null) {
             return tail;
