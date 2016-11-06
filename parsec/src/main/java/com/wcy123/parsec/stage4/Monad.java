@@ -1,17 +1,17 @@
 package com.wcy123.parsec.stage4;
 
+import static com.wcy123.parsec.impl.ParserResult.makeResult;
+
 import java.util.Collections;
 
 import com.google.common.collect.Iterables;
-
-import com.wcy123.parsec.impl.ParserResult;
 
 import rx.functions.Func1;
 
 public class Monad {
     public static <R> Parsec<R> ret(R value) {
         return iterableCharacter -> Collections
-                .singleton(new ParserResult(value, iterableCharacter));
+                .singleton(makeResult(value, iterableCharacter));
     }
 
     static Parsec fail() {

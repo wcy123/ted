@@ -23,12 +23,10 @@ public enum Operations {
     public static <T> Parsec<T> or(Parsec<T> parsecA, Parsec<T> parsecB) {
         return iterableChars -> {
             final Iterable<ParserResult<T>> resultsA = parsecA.parse(iterableChars);
-            if (Iterables.isEmpty(resultsA)) {
-                return parsecB.parse(iterableChars);
-            } else {
-                return resultsA;
-            }
+            return Iterables.isEmpty(resultsA) ? parsecB.parse(iterableChars)
+                    : resultsA;
         };
+
     }
 
     public static <T> Parsec<Cons<T>> many(Parsec<T> parsecA) {

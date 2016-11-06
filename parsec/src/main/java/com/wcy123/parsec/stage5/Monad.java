@@ -13,7 +13,7 @@ import rx.functions.Func2;
 public class Monad {
     public static <R> Parsec<R> ret(R value) {
         return iterableCharacter -> Collections
-                .singleton(new ParserResult(value, iterableCharacter));
+                .singleton(ParserResult.makeResult(value, iterableCharacter));
     }
 
     public static Parsec fail() {
