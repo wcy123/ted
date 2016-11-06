@@ -3,12 +3,16 @@ package org.wcy123.list;
 import static org.wcy123.list.Functions.eql;
 import static org.wcy123.list.Functions.myToString;
 
+import java.util.Iterator;
+
+import org.wcy123.list.internal.ConsIterator;
+
 /**
  * mimic list
  *
  * Created by wangchunye on 10/15/16.
  */
-public final class Cons<T> {
+public final class Cons<T> implements Iterable<T> {
     private static final Cons<?> NIL = new Cons<>();
     private final T car;
     private Cons<T> cdr;
@@ -53,7 +57,7 @@ public final class Cons<T> {
         this.cdr = cdr;
     }
 
-    boolean isNil() {
+    public boolean isNil() {
         return this == NIL;
     }
 
@@ -73,6 +77,11 @@ public final class Cons<T> {
     @Override
     public int hashCode() {
         throw new UnsupportedOperationException("Cons cannot be a key, so no hashCode");
+    }
+
+    @Override
+    public Iterator<T> iterator() {
+        return new ConsIterator(this);
     }
 
 }

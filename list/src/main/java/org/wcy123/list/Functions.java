@@ -66,17 +66,15 @@ public class Functions {
     }
 
     public static <T> String myToString(Cons<T> list) {
-        Cons<T> cur = list;
         StringBuilder buf = new StringBuilder();
         buf.append('[');
-        if (!cur.isNil()) {
-            buf.append(cur.car().toString());
-            cur = cur.cdr();
-        }
-        while (!cur.isNil()) {
-            buf.append(',');
-            buf.append(cur.car().toString());
-            cur = cur.cdr();
+        int i = 0;
+        for (T val : list) {
+            if (i != 0) {
+                buf.append(',');
+            }
+            i++;
+            buf.append(val.toString());
         }
         buf.append(']');
         return buf.toString();

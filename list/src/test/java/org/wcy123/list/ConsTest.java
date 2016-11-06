@@ -12,6 +12,7 @@ import static org.wcy123.list.Functions.fromIterator;
 import static org.wcy123.list.Functions.map;
 import static org.wcy123.list.Functions.reverse;
 
+import java.util.HashMap;
 import java.util.stream.IntStream;
 
 import org.junit.Test;
@@ -42,6 +43,7 @@ public class ConsTest extends TestWithLogger {
     public void testEql() throws Exception {
         assertFalse("not equals", eql(fromArray(1, 2, 3, 4), fromArray(4, 3, 2, 1)));
         assertFalse("not equals", eql(fromArray(1, 2, 3), fromArray(1, 2, 3, 4)));
+        assertFalse("not equals", fromArray(1, 2, 3).equals(1));
     }
 
     @Test
@@ -80,5 +82,12 @@ public class ConsTest extends TestWithLogger {
 
         assertTrue("equals", eql(Cons.nil(), concatMap(x -> Cons.nil(), list1234)));
         assertTrue("equals", eql(Cons.nil(), concatMap(x -> Cons.nil(), Cons.nil())));
+    }
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void hashCodeTest() throws Exception {
+        final Cons<Integer> list12 = fromArray(1, 2);
+        final HashMap<Cons<Integer>, String> map = new HashMap<>();
+        map.put(list12, "test");
     }
 }
