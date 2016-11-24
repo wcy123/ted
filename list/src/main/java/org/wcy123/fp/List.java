@@ -1,12 +1,13 @@
-package org.wcy123.list;
+package org.wcy123.fp;
 
 import java.util.Arrays;
 import java.util.Iterator;
 
-import org.wcy123.list.internal.EfficientBuilder;
+import org.wcy123.fp.internal.EfficientBuilder;
 
 import rx.functions.Func1;
 import rx.functions.Func2;
+import rx.functions.FuncN;
 
 /**
  * why put these functions here?
@@ -15,12 +16,11 @@ import rx.functions.Func2;
  * implement these functions. 2. we cannot rely on JVM supporting on tail call optimization, so that
  * some implementations are using imperative style.
  */
-public enum Functions {
-    ;
-
+public class List<T> {
     // -------------- constructor -------------
     @SafeVarargs
-    public static <T> Cons<T> fromArray(T... array) {
+    public final FuncN Cons<T>fromArray=(T...array)
+    {
         return fromIterable(Arrays.asList(array));
     }
 
@@ -91,13 +91,13 @@ public enum Functions {
     }
 
     public static <T> Cons<T> reverse(Cons<T> list) {
-        return foldl(Functions::cons, Cons.nil(), list);
+        return foldl(List::cons, Cons.nil(), list);
     }
 
     public static <T, R> Cons<R> map(Func1<T, R> f, Cons<T> list) {
         /**
          * the elegant but slightly inefficient
-         * <code>return reverse(foldl((x, acc) -> cons(f.call(x), acc), nil(), list));</code>
+         * <code>return reverse(foldl((x, acc) -> cons(f.call(x), acc), nil(), fp));</code>
          */
 
         EfficientBuilder<R> builder = new EfficientBuilder<>();

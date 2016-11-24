@@ -1,11 +1,11 @@
-package org.wcy123.list.internal;
+package org.wcy123.fp.internal;
 
-import static org.wcy123.list.Functions.cons;
+import static org.wcy123.fp.List.cons;
 
-import org.wcy123.list.Cons;
+import org.wcy123.fp.Cons;
 
 /**
- * efficiently build a list. `revserse-foldl` is a common idiom, so this class efficiently implement
+ * efficiently build a fp. `revserse-foldl` is a common idiom, so this class efficiently implement
  * this idiom. Instead of reversing it, a new element is appended at the tail.
  *
  * @param <T> type

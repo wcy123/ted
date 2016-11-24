@@ -1,0 +1,15 @@
+syntax = "proto3";
+package org.wcy123.api;
+option java_outer_classname = "Protos";
+message LoginRequest {
+    string name = 1;
+    string password = 2;
+}
+message LoginResponse {
+    enum LoginResult {
+        DEFAULT = 0;
+        OK = 1;
+        FAIL = 2;
+    }
+    LoginResult result = 1;
+}

@@ -1,0 +1,41 @@
+= rx java
+王纯业;
+:doctype: book
+@asciidoctor_options[:backend] = 'xhtml'
+:snippets: ../src/main/java/com/wcy123
+:test-snippets: ../src/test/java/com/wcy123
+:toc:
+:toclevels: 4
+:source-highlighter: highlight.js
+
+== 什么是 rxjava
+
+*事件驱动*和*异步调用*是两种慢慢被大家接收的编程范式了。rxjava 库利用*观察者*模式，把*事件驱动*和*异步调用*程序组合在一起。
+
+基于异步调用和事件驱动的程序，经常陷入回调陷阱，导致程序的可读性下降，写出来的程序像意大利面条（callback hell, callback spaghetti）。参考 http://callbackhell.com。
+
+rxjava 提许多*操作符*， 这些操作符可以把 Observable 对象组合在一起，提供其他一些的功能。同时提供了并行运算的功能，充分利用多核计算机的计算能力。
+
+== Hello World
+
+```java
+    public void main1() throws Exception {
+        final Observable<String> observable = Observable.just("hello world"); //<1>
+        final Observer<Object> observer =  Observers.create(System.out::println);; // <2>
+        observable.subscribe(observer); //<3>
+    }
+```
+
+<1> 创建一个 observable
+<2> 创建一个 observer
+<3> 把二者联系起来。 observer 可以观察 observable 了。
+
+简单的序列
+
+```java
+    public void main2() throws Exception {
+        final Observable<Integer> observable = Observable.range(1,10);
+        final Observer<Integer> observer =  Observers.create(System.out::println);
+        observable.subscribe(observer);
+    }
+```

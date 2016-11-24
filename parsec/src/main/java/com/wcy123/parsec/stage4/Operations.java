@@ -2,8 +2,8 @@ package com.wcy123.parsec.stage4;
 
 import static com.wcy123.parsec.impl.Pair.makePair;
 
-import org.wcy123.list.Cons;
-import org.wcy123.list.Functions;
+import org.wcy123.fp.Cons;
+import org.wcy123.fp.List;
 
 import com.google.common.collect.Iterables;
 
@@ -20,7 +20,7 @@ public enum Operations {
     public static <T> Parsec<Cons<T>> cons(Parsec<T> parsecA, Parsec<Cons<T>> parsecB) {
         return parsecA.bind(
                 a -> parsecB.bind(
-                        b -> Monad.ret(Functions.cons(a, b))));
+                        b -> Monad.ret(List.cons(a, b))));
     }
 
     public static <T> Parsec<Cons<T>> nil() {

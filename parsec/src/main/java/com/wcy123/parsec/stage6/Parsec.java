@@ -1,6 +1,6 @@
 package com.wcy123.parsec.stage6;
 
-import org.wcy123.list.Cons;
+import org.wcy123.fp.Cons;
 
 import com.wcy123.parsec.impl.Pair;
 import com.wcy123.parsec.impl.ParserResult;

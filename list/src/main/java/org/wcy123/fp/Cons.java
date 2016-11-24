@@ -1,14 +1,14 @@
-package org.wcy123.list;
+package org.wcy123.fp;
 
-import static org.wcy123.list.Functions.eql;
-import static org.wcy123.list.Functions.myToString;
+import static org.wcy123.fp.List.eql;
+import static org.wcy123.fp.List.myToString;
 
 import java.util.Iterator;
 
-import org.wcy123.list.internal.ConsIterator;
+import org.wcy123.fp.internal.ConsIterator;
 
 /**
- * mimic list
+ * mimic fp
  *
  * Created by wangchunye on 10/15/16.
  */

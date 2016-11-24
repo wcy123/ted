@@ -1,8 +1,8 @@
-package org.wcy123.list.internal;
+package org.wcy123.fp.internal;
 
 import java.util.Iterator;
 
-import org.wcy123.list.Cons;
+import org.wcy123.fp.Cons;
 
 public class ConsIterator<T> implements Iterator<T> {
     private Cons<T> cur;

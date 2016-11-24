@@ -1,16 +1,16 @@
-package org.wcy123.list;
+package org.wcy123.fp;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.wcy123.list.Functions.concat;
-import static org.wcy123.list.Functions.concatMap;
-import static org.wcy123.list.Functions.cons;
-import static org.wcy123.list.Functions.eql;
-import static org.wcy123.list.Functions.fromArray;
-import static org.wcy123.list.Functions.fromIterator;
-import static org.wcy123.list.Functions.map;
-import static org.wcy123.list.Functions.reverse;
+import static org.wcy123.fp.List.concat;
+import static org.wcy123.fp.List.concatMap;
+import static org.wcy123.fp.List.cons;
+import static org.wcy123.fp.List.eql;
+import static org.wcy123.fp.List.fromArray;
+import static org.wcy123.fp.List.fromIterator;
+import static org.wcy123.fp.List.map;
+import static org.wcy123.fp.List.reverse;
 
 import java.util.HashMap;
 import java.util.stream.IntStream;

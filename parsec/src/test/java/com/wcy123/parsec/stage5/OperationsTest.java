@@ -1,12 +1,12 @@
 package com.wcy123.parsec.stage5;
 
 import static com.wcy123.parsec.stage5.Parsec.item;
-import static org.wcy123.list.Functions.fromIterable;
+import static org.wcy123.fp.List.fromIterable;
 
 import java.io.IOException;
 
 import org.junit.Test;
-import org.wcy123.list.Cons;
+import org.wcy123.fp.Cons;
 
 import com.google.common.collect.Lists;
 
@@ -14,7 +14,7 @@ import com.wcy123.parsec.impl.ParserResult;
 import com.wcy123.test.logger.TestWithLogger;
 
 public class OperationsTest extends TestWithLogger {
-    // import list functions
+    // import fp functions
     private final List<Character> list = new List();
 
     @Test
