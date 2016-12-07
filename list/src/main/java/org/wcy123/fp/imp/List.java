@@ -1,9 +1,9 @@
-package org.wcy123.fp;
+package org.wcy123.fp.imp;
 
 import java.util.Arrays;
 import java.util.Iterator;
 
-import org.wcy123.fp.internal.EfficientBuilder;
+import org.wcy123.fp.imp.internal.EfficientBuilder;
 
 import rx.functions.Func1;
 import rx.functions.Func2;

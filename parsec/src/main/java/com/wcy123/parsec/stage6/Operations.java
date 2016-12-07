@@ -2,10 +2,10 @@ package com.wcy123.parsec.stage6;
 
 import static com.wcy123.parsec.impl.Pair.makePair;
 import static com.wcy123.parsec.stage6.Monad.ret;
-import static org.wcy123.fp.Cons.nil;
-import static org.wcy123.fp.List.cons;
+import static org.wcy123.fp.imp.Cons.nil;
+import static org.wcy123.fp.imp.List.cons;
 
-import org.wcy123.fp.Cons;
+import org.wcy123.fp.imp.Cons;
 
 import com.google.common.collect.Iterables;
 

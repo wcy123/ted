@@ -1,4 +1,4 @@
-package org.wcy123.fp;
+package org.wcy123.fp.imp;
 
 public class Atom {
     final private String name;

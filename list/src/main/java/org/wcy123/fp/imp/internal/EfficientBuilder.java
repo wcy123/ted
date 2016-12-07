@@ -1,8 +1,8 @@
-package org.wcy123.fp.internal;
+package org.wcy123.fp.imp.internal;
 
-import static org.wcy123.fp.List.cons;
+import static org.wcy123.fp.imp.List.cons;
 
-import org.wcy123.fp.Cons;
+import org.wcy123.fp.imp.Cons;
 
 /**
  * efficiently build a fp. `revserse-foldl` is a common idiom, so this class efficiently implement

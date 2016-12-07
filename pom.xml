@@ -27,6 +27,7 @@
         <module>learn-rxjava</module>
         <module>json-polymophizm</module>
         <module>fun-test</module>
+        <module>redis-session</module>
     </modules>
     <build>
         <plugins>

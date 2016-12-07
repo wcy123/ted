@@ -6,7 +6,7 @@ import static com.wcy123.parsec.stage6.Operations.or;
 
 import java.util.Collections;
 
-import org.wcy123.fp.Cons;
+import org.wcy123.fp.imp.Cons;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;

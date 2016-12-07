@@ -1,11 +1,11 @@
-package org.wcy123.fp;
+package org.wcy123.fp.imp;
 
-import static org.wcy123.fp.List.eql;
-import static org.wcy123.fp.List.myToString;
+import static org.wcy123.fp.imp.List.eql;
+import static org.wcy123.fp.imp.List.myToString;
 
 import java.util.Iterator;
 
-import org.wcy123.fp.internal.ConsIterator;
+import org.wcy123.fp.imp.internal.ConsIterator;
 
 /**
  * mimic fp

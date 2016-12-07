@@ -1,12 +1,12 @@
 package com.wcy123.parsec.stage5;
 
 import static com.wcy123.parsec.stage5.Parsec.item;
-import static org.wcy123.fp.List.fromIterable;
+import static org.wcy123.fp.imp.List.fromIterable;
 
 import java.io.IOException;
 
 import org.junit.Test;
-import org.wcy123.fp.Cons;
+import org.wcy123.fp.imp.Cons;
 
 import com.google.common.collect.Lists;
 

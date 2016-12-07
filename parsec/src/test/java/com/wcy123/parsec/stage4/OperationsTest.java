@@ -3,12 +3,12 @@ package com.wcy123.parsec.stage4;
 import static com.wcy123.parsec.stage4.Operations.cons;
 import static com.wcy123.parsec.stage4.Operations.nil;
 import static com.wcy123.parsec.stage4.Parsec.item;
-import static org.wcy123.fp.List.fromIterable;
+import static org.wcy123.fp.imp.List.fromIterable;
 
 import java.io.IOException;
 
 import org.junit.Test;
-import org.wcy123.fp.Cons;
+import org.wcy123.fp.imp.Cons;
 
 import com.google.common.collect.Lists;
 

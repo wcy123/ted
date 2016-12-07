@@ -1,4 +1,4 @@
-package org.wcy123.fp;
+package org.wcy123.fp.imp;
 
 import org.junit.Assert;
 import org.junit.Test;

@@ -2,8 +2,8 @@ package com.wcy123.parsec.stage5;
 
 import static com.wcy123.parsec.impl.Pair.makePair;
 
-import org.wcy123.fp.Cons;
-import org.wcy123.fp.List;
+import org.wcy123.fp.imp.Cons;
+import org.wcy123.fp.imp.List;
 
 import com.google.common.collect.Iterables;
 
