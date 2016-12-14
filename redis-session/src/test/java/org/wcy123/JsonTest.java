@@ -1,11 +1,16 @@
 package org.wcy123;
 
+import java.util.Arrays;
+
 import org.junit.Test;
 import org.wcy123.api.DataTypesTest;
+import org.wcy123.api.Protos;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ListValue;
+import com.google.protobuf.Message;
+import com.google.protobuf.MessageOrBuilder;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.Value;
 import com.google.protobuf.util.JsonFormat;
@@ -51,5 +56,15 @@ public class JsonTest {
                         .add(DataTypesTest.Point.getDescriptor())
                         .build());
         System.out.println(printer.print(root));
+    }
+
+    @Test
+    public void main2() throws Exception {
+        final Class<?>[] classes = DataTypesTest.class.getClasses();
+        for (Class<?> c : Arrays.asList(classes)) {
+            if (MessageOrBuilder.class.isAssignableFrom(c)) {
+                System.out.println(c.getSimpleName());
+            }
+        }
     }
 }
